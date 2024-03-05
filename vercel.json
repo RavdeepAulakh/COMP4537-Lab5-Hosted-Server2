@@ -1,0 +1,19 @@
+{
+    "functions": {
+      "api": {
+        "/insert": {
+          "handler": "index.insert",
+          "methods": ["POST"]
+        },
+        "/query": {
+          "handler": "index.query",
+          "methods": ["GET"]
+        }
+      }
+    },
+    "routes": [
+      { "handle": "filesystem" },
+      { "src": "/.*", "dest": "/app.js" }
+    ]
+  }
+  
