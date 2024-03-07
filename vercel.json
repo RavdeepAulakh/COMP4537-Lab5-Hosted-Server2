@@ -1,27 +1,19 @@
 {
   "version": 2,
-  "functions": {
-    "insert": {
-      "handler": "app.js",
-      "events": [
-        {
-          "http": {
-            "method": "post",
-            "path": "/insert"
-          }
-        }
-      ]
-    },
-    "query": {
-      "handler": "app.js",
-      "events": [
-        {
-          "http": {
-            "method": "get",
-            "path": "/query"
-          }
-        }
-      ]
+  "builds": [
+    {
+      "src": "app.js", 
+      "use": "@vercel/node"
     }
-  }
-}
+  ],
+  "routes": [
+    {
+      "src": "/query",
+      "dest": "app.js" 
+    },
+    {
+      "src": "/insert",
+      "dest": "app.js"
+    }
+  ]
+}  
