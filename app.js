@@ -1,15 +1,19 @@
 const http = require('http');
 const url = require('url');
 const mysql = require('mysql2');
+require('dotenv').config();
 const constants = require('./modules/constants');
+
+const BASE_CONNECTION_STRING = process.env.BASE_CONNECTION_STRING;
+const LIMITED_CONNECTION_STRING = process.env.LIMITED_CONNECTION_STRING;
 
 function createConnectionWithPermissions(query) {
   if (query && (query.toUpperCase().startsWith('DELETE') || query.toUpperCase().startsWith('DROP'))) {
       // Create a connection string with limited permissions
-      return constants.LIMITED_CONNECTION_STRING;
+      return LIMITED_CONNECTION_STRING;
   } else {
       // Create a connection string with full permissions
-      return constants.BASE_CONNECTION_STRING;
+      return BASE_CONNECTION_STRING;
   }
 }
 
