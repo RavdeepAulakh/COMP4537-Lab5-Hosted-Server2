@@ -1,19 +1,32 @@
 {
-    "functions": {
-      "api": {
-        "/insert": {
-          "handler": "index.insert",
-          "methods": ["POST"]
-        },
-        "/query": {
-          "handler": "index.query",
-          "methods": ["GET"]
-        }
+  "functions": {
+    "api": {
+      "insert": {
+        "handler": "index.insert",
+        "events": [
+          {
+            "http": {
+              "method": "post",
+              "path": "/insert"
+            }
+          }
+        ]
+      },
+      "query": {
+        "handler": "index.query",
+        "events": [
+          {
+            "http": {
+              "method": "get",
+              "path": "/query"
+            }
+          }
+        ]
       }
-    },
-    "routes": [
-      { "handle": "filesystem" },
-      { "src": "/.*", "dest": "/app.js" }
-    ]
-  }
-  
+    }
+  },
+  "routes": [
+    { "handle": "filesystem" },
+    { "src": "/.*", "dest": "/app.js" }
+  ]
+}

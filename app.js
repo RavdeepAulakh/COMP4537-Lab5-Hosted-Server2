@@ -1,34 +1,17 @@
 const http = require('http');
 const url = require('url');
-const mysql = require('mysql');
+const mysql = require('mysql2');
+const constants = require('./modules/constants');
 
-// Create MySQL connection
-const connection = mysql.createConnection({
-  host: 'sql3.freesqldatabase.com',
-  port: 3306,
-  user: 'sql3688998',
-  password: 'XECqQxXNDp',
-  database: 'sql3688998'
-});
-
-// Connect to MySQL
-connection.connect((err) => {
-  if (err) throw err;
-  console.log('Connected to MySQL database');
-  
-  // SQL query to create table if not exists
-  const createTableQuery = `CREATE TABLE IF NOT EXISTS patients (
-    patientid INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100),
-    dateOfBirth datetime
-  ) ENGINE=InnoDB`;
-  
-  // Execute SQL query to create table
-  connection.query(createTableQuery, (err, result) => {
-    if (err) throw err;
-    console.log('Patients table created or already exists');
-  });
-});
+function createConnectionWithPermissions(query) {
+  if (query && (query.toUpperCase().startsWith('DELETE') || query.toUpperCase().startsWith('DROP'))) {
+      // Create a connection string with limited permissions
+      return constants.LIMITED_CONNECTION_STRING;
+  } else {
+      // Create a connection string with full permissions
+      return constants.BASE_CONNECTION_STRING;
+  }
+}
 
 // Create HTTP server
 const server = http.createServer((req, res) => {
@@ -58,9 +41,11 @@ const server = http.createServer((req, res) => {
           postData = JSON.parse(body);
         } catch (error) {
           res.writeHead(400, { 'Content-Type': 'text/plain' });
-          res.end('Invalid JSON data');
+          res.end(constants.INVALID_JSON_DATA_MESSAGE);
           return;
         }
+
+        const connection = mysql.createConnection(createConnectionWithPermissions(postData.query));
   
         if (Array.isArray(postData)) {
           // If postData is an array, insert multiple patients
@@ -69,10 +54,10 @@ const server = http.createServer((req, res) => {
           connection.query(insertQuery, [values], (err, result) => {
             if (err) {
               res.writeHead(500, { 'Content-Type': 'text/plain' });
-              res.end('Error inserting data into database');
+              res.end(constants.INSERT_ERROR_MESSAGE);
             } else {
               res.writeHead(200, { 'Content-Type': 'text/plain' });
-              res.end('Data inserted successfully');
+              res.end(constants.INSERT_SUCCESS_MESSAGE);
             }
           });
         } else {
@@ -81,10 +66,10 @@ const server = http.createServer((req, res) => {
           connection.query(insertQuery, (err, result) => {
             if (err) {
               res.writeHead(500, { 'Content-Type': 'text/plain' });
-              res.end(JSON.stringify({ error: 'Error inserting data into database' }));
+              res.end(JSON.stringify({ error: constants.INSERT_ERROR_MESSAGE }));
             } else {
               res.writeHead(200, { 'Content-Type': 'text/plain' });
-              res.end(JSON.stringify({ message: 'Data inserted successfully' }));
+              res.end(JSON.stringify({ message: constants.INSERT_SUCCESS_MESSAGE }));
             }
           });
         }
@@ -93,16 +78,17 @@ const server = http.createServer((req, res) => {
   } else if (req.method === 'GET') {
     if (pathname === '/query') {
       const query = parsedUrl.query.query;
+      const connection = mysql.createConnection(createConnectionWithPermissions(query));
       if(!isSelectQuery(query)) {
         res.writeHead(400, { 'Content-Type': 'text/plain' });
-        res.end('Only SELECT queries are allowed');
+        res.end(constants.SELECT_ONLY_ERROR_MESSAGE);
         return;
       }
 
       connection.query(query, (err, result) => {
         if (err) {
           res.writeHead(500, { 'Content-Type': 'text/plain' });
-          res.end('Error executing query');
+          res.end(constants.EXECUTE_ERROR_MESSAGE);
         } else {
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify(result));
@@ -111,7 +97,7 @@ const server = http.createServer((req, res) => {
     }
   } else {
     res.writeHead(404, { 'Content-Type': 'text/plain' });
-    res.end('404 Not Found');
+    res.end(constants.NOT_FOUND_MESSAGE);
   }
 });
 
